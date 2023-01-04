@@ -19,18 +19,24 @@ def genParser() -> argparse.ArgumentParser:
     """
     parser = argparse.ArgumentParser(description="A utility for quickly " +
                                      "switching proxychains proxies")
+    parser.set_defaults(temp=False)
     subparsers = parser.add_subparsers()
     parserSwitch = subparsers.add_parser("switch",
                                          help="switch to a proxy definition")
     parserSwitch.set_defaults(func=switch, file=proxyConf)
+    parserTemp = subparsers.add_parser("temp", help="switch to a temporary " +
+                                       "proxy definition")
+    parserTemp.set_defaults(func=switch, file=proxyConf, temp=True)
+    parserSwitch.set_defaults(func=switch, file=proxyConf)
     parserAdd = subparsers.add_parser("add", help="add a proxy definition")
-    parserAdd.set_defaults(func=add)
+    parserAdd.set_defaults(func=add, file=proxyConf)
     parserUpdate = subparsers.add_parser("update",
                                          help="update a proxy definition")
     parserUpdate.add_argument('-r', "--rename", action="store",
                                help="new name for proxy definition")
-    parserUpdate.set_defaults(func=update)
-    for subparser in [(parserAdd, True), (parserUpdate, False)]:
+    parserUpdate.set_defaults(func=update, file=proxyConf)
+    for subparser in [(parserAdd, True), (parserUpdate, False),
+                      (parserTemp, True)]:
         subparser[0].add_argument('-t', "--type", action="store",
                                   choices=["http", "raw", "socks4", "socks5"],
                                   help="proxy type", required=subparser[1])
@@ -52,9 +58,9 @@ def genParser() -> argparse.ArgumentParser:
     parserActive = subparsers.add_parser("active",
                                          help="show active proxy definition")
     parserActive.set_defaults(func=showActive, file=proxyConf)
-    for subparser in [parserAdd, parserUpdate, parserSwitch, parserActive]:
+    for subparser in [parserAdd, parserUpdate, parserSwitch, parserTemp,
+                      parserActive]:
         subparser.add_argument('-f', '--file', action="store",
-                               default=proxyConf,
                                help="proxychains configuration file to use " +
                                f"(default: '{proxyConf}')")
     parserDelete = subparsers.add_parser("delete",
@@ -107,9 +113,12 @@ def checkArgs(args: argparse.Namespace) -> argparse.Namespace:
                     args.passw = "<PROMPT_ON_SWITCH>"
                     print("Users will be prompted for the password on switch")
     if hasattr(args, "passw") and args.passw:
-        passw = getpass("Password (Leave blank to prompt for password on " +
-                        "switch): ")
-        if passw == "":
+        if args.temp:
+            prompt = "Password: "
+        else:
+            prompt = "Password (Leave blank to prompt for password on switch): "
+        passw = getpass(prompt)
+        if not args.temp and passw == "":
             args.passw = "<PROMPT_ON_SWITCH>"
         elif passw == getpass("Confirm Password: "):
             args.passw = passw
@@ -311,22 +320,29 @@ def switch(args: argparse.Namespace):
     @param args: Validated CLI arguments
     """
     checkProx(args.file)
-    defs = getDefs()
-    proxLine = ""
-    for defi in defs:
-        if defi['Name'] == args.name:
-            proxLine = f"{defi['Type']}\t{defi['IPv4']}\t{defi['Port']}"
-            if defi['Password'] == "<PROMPT_ON_SWITCH>":
-                passw = getpass(f"Password for '{args.name}': ")
-                if passw == getpass("Confirm Password: "):
-                    defi['Password'] = passw
-            if defi['Username'] is not None:
-                proxLine += f"\t{defi['Username']}\t"
-                if defi['Password'] is not None:
-                    proxLine += f"{defi['Password']}"
-            break
-    if proxLine == "":
-        sys.exit(f"Proxy definition '{args.name}' does not exist")
+    if not hasattr(args, "name"):
+        proxLine = f"{args.type}\t{args.ipv4}\t{args.port}"
+        if args.user is not None:
+            proxLine += f"\t{args.user}\t"
+            if args.passw is not None:
+                proxLine += f"{args.passw}"
+    else:
+        defs = getDefs()
+        proxLine = ""
+        for defi in defs:
+            if defi['Name'] == args.name:
+                proxLine = f"{defi['Type']}\t{defi['IPv4']}\t{defi['Port']}"
+                if defi['Password'] == "<PROMPT_ON_SWITCH>":
+                    passw = getpass(f"Password for '{args.name}': ")
+                    if passw == getpass("Confirm Password: "):
+                        defi['Password'] = passw
+                if defi['Username'] is not None:
+                    proxLine += f"\t{defi['Username']}\t"
+                    if defi['Password'] is not None:
+                        proxLine += f"{defi['Password']}"
+                break
+        if proxLine == "":
+            sys.exit(f"Proxy definition '{args.name}' does not exist")
     with open(proxyConf, 'r') as f:
         lines = f.readlines()
     replace = False
@@ -342,7 +358,6 @@ def switch(args: argparse.Namespace):
     with open(proxyConf, 'w') as f:
         f.write(out)
     print("Proxychains configuration updated successfully")
-    
 
 def main():
     """Main method"""
