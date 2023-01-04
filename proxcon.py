@@ -52,8 +52,9 @@ def genParser() -> argparse.ArgumentParser:
     parserActive = subparsers.add_parser("active",
                                          help="show active proxy definition")
     parserActive.set_defaults(func=showActive, file=proxyConf)
-    for subparser in [parserSwitch, parserActive]:
+    for subparser in [parserAdd, parserSwitch, parserActive]:
         subparser.add_argument('-f', '--file', action="store",
+                               default=proxyConf,
                                help="proxychains configuration file to use " +
                                f"(default: '{proxyConf}')")
     parserDelete = subparsers.add_parser("delete",
@@ -197,7 +198,9 @@ def add(args: argparse.Namespace):
                           args.passw)
     with open(dotPath, 'a') as f:
         f.write(proxDef)
-    print("Proxy definition added successfully")
+    if yesNo("Proxy definition added successfully. Would you like to switch " +
+             "to it now?"):
+        switch(args)
 
 def update(args: argparse.Namespace):
     """Updates a proxy definition with the given parameters
