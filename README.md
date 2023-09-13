@@ -143,6 +143,13 @@ options:
   -b, --batch  Suppresses warnings/prompts for use in scripts
 ```
 
+## Installation
+
+It is recommended to install proxcon using pipx:
+<pre>
+pipx install git+https://github.com/JamesConlan96/proxcon.git
+</pre>
+
 ## Requirements
 
 All requirements can be installed by running the following command from within the proxconf directory:

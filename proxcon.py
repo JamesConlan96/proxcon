@@ -361,18 +361,18 @@ def switch(args: argparse.Namespace):
 
 def main():
     """Main method"""
-    parser = genParser()
-    if len(sys.argv) == 1:
-        parser.print_usage()
-        sys.exit()
-    args = parser.parse_args()
-    args = checkArgs(args)
-    checkDot()
-    args.func(args)
+    try:
+        parser = genParser()
+        if len(sys.argv) == 1:
+            parser.print_usage()
+            sys.exit()
+        args = parser.parse_args()
+        args = checkArgs(args)
+        checkDot()
+        args.func(args)
+    except KeyboardInterrupt:
+        sys.exit(0)
 
 
 if __name__ == "__main__":
-    try:
-        main()
-    except KeyboardInterrupt:
-        sys.exit(0)
+    main()
