@@ -27,7 +27,7 @@ options:
 Switch to a proxy definition
 
 ```
-usage: proxcon.py switch [-h] [-f FILE] name
+usage: proxcon.py switch [-h] [-f FILE] [-b] name
 
 positional arguments:
   name                  name of proxy definition
@@ -35,6 +35,7 @@ positional arguments:
 options:
   -h, --help            show this help message and exit
   -f FILE, --file FILE  proxychains configuration file to use (default: '/etc/proxychains4.conf')
+  -b, --batch           Suppresses warnings/prompts for use in scripts
 ```
 
 **proxcon.py add**
@@ -42,7 +43,7 @@ options:
 Add a proxy definition
 
 ```
-usage: proxcon.py add [-h] -t {http,raw,socks4,socks5} -i IPV4 -p PORT [-u USER] [-P] [-f FILE] name
+usage: proxcon.py add [-h] -t {http,raw,socks4,socks5} -i IPV4 -p PORT [-u USER] [-P] [-f FILE] [-b] name
 
 positional arguments:
   name                  name of proxy definition
@@ -56,6 +57,7 @@ options:
   -u USER, --user USER  username for proxy authentication
   -P, --pass            a password is required to access the proxy
   -f FILE, --file FILE  proxychains configuration file to use (default: '/etc/proxychains4.conf')
+  -b, --batch           Suppresses warnings/prompts for use in scripts
 ```
 
 **proxcon.py update**
@@ -63,7 +65,7 @@ options:
 Update a proxy definition
 
 ```
-usage: proxcon.py update [-h] [-r RENAME] [-t {http,raw,socks4,socks5}] [-i IPV4] [-p PORT] [-u USER] [-P] [-f FILE] name
+usage: proxcon.py update [-h] [-r RENAME] [-t {http,raw,socks4,socks5}] [-i IPV4] [-p PORT] [-u USER] [-P] [-f FILE] [-b] name
 
 positional arguments:
   name                  name of proxy definition
@@ -79,6 +81,7 @@ options:
   -u USER, --user USER  username for proxy authentication
   -P, --pass            a password is required to access the proxy
   -f FILE, --file FILE  proxychains configuration file to use (default: '/etc/proxychains4.conf')
+  -b, --batch           Suppresses warnings/prompts for use in scripts
 ```
 
 **proxcon.py list**
@@ -109,13 +112,14 @@ options:
 Delete a proxy definition
 
 ```
-usage: proxcon.py delete [-h] name
+usage: proxcon.py delete [-h] [-b] name
 
 positional arguments:
-  name        name of proxy definition
+  name         name of proxy definition
 
 options:
-  -h, --help  show this help message and exit
+  -h, --help   show this help message and exit
+  -b, --batch  Suppresses warnings/prompts for use in scripts
 ```
 
 ## Requirements

@@ -61,6 +61,9 @@ def genParser() -> argparse.ArgumentParser:
                                          help="delete a proxy definition")
     parserDelete.set_defaults(func=delete)
     for subparser in [parserSwitch, parserAdd, parserUpdate, parserDelete]:
+        subparser.add_argument('-b', "--batch", action="store_true",
+                               help="Suppresses warnings/prompts for use in " +
+                               "scripts")
         subparser.add_argument("name", action="store",
                                help="name of proxy definition")
     return parser
@@ -95,7 +98,8 @@ def checkArgs(args: argparse.Namespace) -> argparse.Namespace:
             if args.user is not None and args.passw is False:
                 args.passw = "<PROMPT_ON_SWITCH>"
         elif args.func == update:
-            if args.user is not None and args.passw is False:
+            if args.user is not None and args.passw is False and \
+            args.batch is False:
                 yn = yesNo("You have updated a username but not a password. " +
                            "Do you wish to keep the existing password " +
                            "configuration?")
@@ -111,6 +115,8 @@ def checkArgs(args: argparse.Namespace) -> argparse.Namespace:
             args.passw = passw
         else:
             sys.exit("Passwords did not match")
+    if hasattr(args, "passw") and not args.passw:
+        args.passw = None
     return args
 
 def checkDot():
@@ -181,10 +187,12 @@ def genOutLine(name: str, type: str, ipv4: str, port: int, user: str,
     @return Output line
     """
     proxDef = f"{name}\t{type}\t{ipv4}\t{port}"
-    if user and user is not None:
-        proxDef += f"\t{user}"
-    if passw and passw is not None:
-        proxDef += f"\t{passw}"
+    if user is None:
+        user = ""
+    proxDef += f"\t{user}"
+    if passw is None:
+        passw = ""
+    proxDef += f"\t{passw}"
     return proxDef
 
 def add(args: argparse.Namespace):
@@ -198,9 +206,10 @@ def add(args: argparse.Namespace):
                           args.passw)
     with open(dotPath, 'a') as f:
         f.write(proxDef)
-    if yesNo("Proxy definition added successfully. Would you like to switch " +
-             "to it now?"):
-        switch(args)
+    print("Proxy definition added successfully")
+    if not args.batch:
+        if yesNo("Would you like to switch to it now?"):
+            switch(args)
 
 def update(args: argparse.Namespace):
     """Updates a proxy definition with the given parameters
@@ -228,9 +237,10 @@ def update(args: argparse.Namespace):
         out += "\n"
     with open(dotPath, 'w') as f:
         f.write(out)
-    if yesNo("Proxy definition updated successfully. Would you like to switch" +
-             " to it now?"):
-        switch(args)
+    print("Proxy definition updated successfully")
+    if not args.batch:
+        if yesNo("Would you like to switch to it now?"):
+            switch(args)
 
 def listDefs(args: argparse.Namespace):
     """Lists proxy definitions
@@ -238,10 +248,10 @@ def listDefs(args: argparse.Namespace):
     """
     defs = getDefs()
     for defi in defs:
-        defi['Username'] = "N/A" if defi['Username'] == None else \
-                           defi['Username']
-        defi['Password'] = "N/A" if defi['Password'] == None else \
-                           defi['Password']
+        if defi['Username'] is None or defi['Username'].strip() == "":
+            defi['Username'] = "N/A"
+        if defi['Password'] is None or defi['Password'].strip() == "":
+            defi['Password'] = "N/A"
     try:
         print(tabulate([x.values() for x in defs], defs[0].keys()))
     except:
@@ -276,8 +286,11 @@ def delete(args: argparse.Namespace):
     for i, defi in enumerate(defs):
         if defi['Name'] == args.name:
             found = True
-            yn = yesNo("Are you sure you want to delete proxy definition '" +
-                       f"{args.name}'?")
+            if args.batch:
+                yn = True
+            else:
+                yn = yesNo("Are you sure you want to delete proxy definition " +
+                           f"'{args.name}'?")
             if yn:
                 defs.pop(i)
             else:
