@@ -7,11 +7,14 @@ A utility for quickly switching proxychains proxies
 **proxcon.py**
 
 ```
-usage: proxcon.py [-h] {switch,add,update,list,active,delete} ...
+usage: proxcon.py [-h] {switch,temp,add,update,list,active,delete} ...
+
+A utility for quickly switching proxychains proxies
 
 positional arguments:
-  {switch,add,update,list,active,delete}
+  {switch,temp,add,update,list,active,delete}
     switch              switch to a proxy definition
+    temp                switch to a temporary proxy definition
     add                 add a proxy definition
     update              update a proxy definition
     list                list all proxy definitions
@@ -36,6 +39,24 @@ options:
   -h, --help            show this help message and exit
   -f FILE, --file FILE  proxychains configuration file to use (default: '/etc/proxychains4.conf')
   -b, --batch           Suppresses warnings/prompts for use in scripts
+```
+
+**proxcon.py temp**
+
+Switch to a temporary proxy definition
+
+```
+usage: proxcon.py temp [-h] -t {http,raw,socks4,socks5} -i IPV4 -p PORT [-u USER] [-P] [-f FILE]
+
+options:
+  -h, --help            show this help message and exit
+  -t {http,raw,socks4,socks5}, --type {http,raw,socks4,socks5}
+                        proxy type
+  -i IPV4, --ipv4 IPV4  proxy server IPv4 address
+  -p PORT, --port PORT  proxy server port
+  -u USER, --user USER  username for proxy authentication
+  -P, --pass            a password is required to access the proxy
+  -f FILE, --file FILE  proxychains configuration file to use (default: '/etc/proxychains4.conf')
 ```
 
 **proxcon.py add**
